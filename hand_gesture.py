@@ -2,13 +2,11 @@ import cv2
 from mediapipe import solutions as mp_solutions
 import pyttsx3
 
-# Initialize MediaPipe Hands and Text-to-Speech engine
 mp_hands = mp_solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mp_drawing = mp_solutions.drawing_utils
 engine = pyttsx3.init()
 
-# Map gestures to messages
 gesture_mapping = {
     "thumbs_up": "Yes",
     "palm_open": "Hello",
@@ -18,7 +16,6 @@ gesture_mapping = {
     "ok_sign": "Okay",
 }
 
-# Function to classify hand gestures
 def classify_hand_gesture(landmarks):
     thumb_tip = landmarks[4]
     index_tip = landmarks[8]
@@ -27,7 +24,6 @@ def classify_hand_gesture(landmarks):
     pinky_tip = landmarks[20]
     thumb_ip = landmarks[3]
 
-    # Gesture logic
     if thumb_tip.y < thumb_ip.y and all(finger.y > thumb_ip.y for finger in [index_tip, middle_tip, ring_tip, pinky_tip]):
         return "thumbs_up"
     elif all(finger.y < thumb_tip.y for finger in [index_tip, middle_tip, ring_tip, pinky_tip]):
@@ -43,11 +39,10 @@ def classify_hand_gesture(landmarks):
     else:
         return "unknown"
 
-# Real-time gesture recognition with video feed
 def main():
-    cap = cv2.VideoCapture(0)  # Access webcam
+    cap = cv2.VideoCapture(0) 
 
-    # Optimize resolution for performance
+
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
@@ -58,7 +53,7 @@ def main():
         if not ret:
             break
 
-        # Resize frame and process every nth frame
+        
         frame = cv2.resize(frame, (640, 480))
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -67,25 +62,23 @@ def main():
 
             if result.multi_hand_landmarks:
                 for hand_landmarks in result.multi_hand_landmarks:
-                    # Classify gesture
+               
                     gesture = classify_hand_gesture(hand_landmarks.landmark)
                     text = gesture_mapping.get(gesture, "Gesture not recognized")
 
-                    # Draw landmarks only for recognized gestures
+                   
                     if gesture != "unknown":
                         mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
                         cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-                        # Speak the recognized gesture
+                        
                         engine.say(text)
                         engine.runAndWait()
 
         frame_count += 1  # Increment frame counter
 
-        # Show the video feed
         cv2.imshow("Hand Gesture Communicator", frame)
 
-        # Exit on 'q' or 'Esc'
         key = cv2.waitKey(1) & 0xFF
         if key == 27 or key == ord('q'):
             break
@@ -93,6 +86,5 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-# Run the program
 if __name__ == "__main__":
     main()
